@@ -25,6 +25,8 @@ public class WooCommerceService {
     @Value("${woocommerce.api.secret}")
     private String apiSecret;
 
+    private final ObjectMapper mapper = new ObjectMapper();
+
     public List<Set<Integer>> getOrderTransactions() throws IOException {
         String credentials = apiKey + ":" + apiSecret;
         String base64Creds = Base64.getEncoder().encodeToString(credentials.getBytes());
@@ -38,7 +40,6 @@ public class WooCommerceService {
         String response = reader.lines().collect(Collectors.joining());
         reader.close();
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode orders = mapper.readTree(response);
 
         List<Set<Integer>> transactions = new ArrayList<>();
@@ -54,5 +55,21 @@ public class WooCommerceService {
         }
 
         return transactions;
+    }
+
+    public JsonNode getProductDetails(int productId) throws IOException {
+        String credentials = apiKey + ":" + apiSecret;
+        String base64Creds = Base64.getEncoder().encodeToString(credentials.getBytes());
+
+        HttpURLConnection connection = (HttpURLConnection) new URL("https://www.benfatto.jdvart.it/wp-json/wc/v3/products/" + productId).openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Basic " + base64Creds);
+        connection.setRequestProperty("Accept", "application/json");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String response = reader.lines().collect(Collectors.joining());
+        reader.close();
+
+        return mapper.readTree(response);
     }
 }
