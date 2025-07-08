@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.*;
 
-@CrossOrigin(origins = "https://www.benfatto.jdvart.it", allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
 public class BasketController {
