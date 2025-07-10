@@ -46,6 +46,10 @@ public class AprioriService {
             freqItemsets.putAll(filtered);
 
             Set<Set<Integer>> nextGen = generateNextItemsets(filtered.keySet());
+
+            if (nextGen.isEmpty())                // ⬅️ nuovo guard-clause
+                break;                            //    interrompe il ciclo
+
             candidates = countItemsets(nextGen, transactions);
         }
 
@@ -121,17 +125,33 @@ public class AprioriService {
         return result;
     }
 
-    private Map<Set<Integer>, Integer> countItemsets(Set<Set<Integer>> candidates, List<Set<Integer>> transactions) {
+ // sostituisci *intero* metodo
+    private Map<Set<Integer>, Integer> countItemsets(Set<Set<Integer>> candidates,
+                                                     List<Set<Integer>> transactions) {
+
+        // ❶ Se non ci sono più candidati, non calcolare nulla
+        if (candidates == null || candidates.isEmpty()) {
+            return Collections.emptyMap();          // evita NoSuchElementException
+        }
+
+        int size = candidates.iterator().next().size();
         Map<Set<Integer>, Integer> counts = new HashMap<>();
-        for (Set<Set<Integer>> transactionCandidates : transactions.stream().map(t -> combinations(t, candidates.iterator().next().size())).toList()) {
+
+        // ❷ Conta quante volte ogni candidato compare nelle transazioni
+        for (Set<Set<Integer>> transactionCandidates :
+                transactions.stream()
+                            .map(t -> combinations(t, size))
+                            .toList()) {
+
             for (Set<Integer> candidate : candidates) {
                 if (transactionCandidates.contains(candidate)) {
-                    counts.put(candidate, counts.getOrDefault(candidate, 0) + 1);
+                    counts.merge(candidate, 1, Integer::sum); // più conciso di getOrDefault
                 }
             }
         }
         return counts;
     }
+
 
     private Set<Set<Integer>> getSubsets(Set<Integer> set) {
         Set<Set<Integer>> subsets = new HashSet<>();
