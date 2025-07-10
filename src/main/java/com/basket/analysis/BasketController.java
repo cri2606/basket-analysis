@@ -20,18 +20,26 @@ public class BasketController {
     @Autowired
     private AprioriService aprioriService;
 
-    private Map<Set<Integer>, Set<Integer>> rulesCache = null;
+    private List<AprioriService.Rule> rulesCache = null;
 
     @GetMapping("/suggestions")
     public ResponseEntity<Set<Integer>> getSuggestions(@RequestParam List<Integer> cart) {
         try {
             if (rulesCache == null) {
                 List<Set<Integer>> transactions = wooService.getOrderTransactions();
-                rulesCache = aprioriService.generateAssociationRules(transactions);
+                rulesCache = aprioriService.apriori(transactions);
             }
 
             Set<Integer> cartSet = new HashSet<>(cart);
-            Set<Integer> suggestions = aprioriService.suggestProducts(cartSet, rulesCache);
+            Set<Integer> suggestions = new HashSet<>();
+
+            for (AprioriService.Rule rule : rulesCache) {
+                if (cartSet.containsAll(rule.antecedent)) {
+                    suggestions.addAll(rule.consequent);
+                }
+            }
+
+            suggestions.removeAll(cart);
             return ResponseEntity.ok(suggestions);
         } catch (IOException e) {
             return ResponseEntity.status(500).build();
@@ -43,11 +51,19 @@ public class BasketController {
         try {
             if (rulesCache == null) {
                 List<Set<Integer>> transactions = wooService.getOrderTransactions();
-                rulesCache = aprioriService.generateAssociationRules(transactions);
+                rulesCache = aprioriService.apriori(transactions);
             }
 
             Set<Integer> cartSet = new HashSet<>(cart);
-            Set<Integer> suggestions = aprioriService.suggestProducts(cartSet, rulesCache);
+            Set<Integer> suggestions = new HashSet<>();
+
+            for (AprioriService.Rule rule : rulesCache) {
+                if (cartSet.containsAll(rule.antecedent)) {
+                    suggestions.addAll(rule.consequent);
+                }
+            }
+
+            suggestions.removeAll(cart);
 
             ArrayNode array = JsonNodeFactory.instance.arrayNode();
             for (Integer id : suggestions) {
@@ -62,7 +78,8 @@ public class BasketController {
     }
 
     @GetMapping("/rules")
-    public ResponseEntity<Map<Set<Integer>, Set<Integer>>> getRules() {
-        return ResponseEntity.ok(rulesCache != null ? rulesCache : Map.of());
+    public ResponseEntity<List<AprioriService.Rule>> getRules() {
+        return ResponseEntity.ok(rulesCache != null ? rulesCache : List.of());
     }
 }
+
