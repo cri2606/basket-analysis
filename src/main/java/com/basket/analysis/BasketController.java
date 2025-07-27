@@ -3,6 +3,8 @@ package com.basket.analysis;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+
+import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api")
@@ -22,6 +27,8 @@ public class BasketController {
     private AprioriService aprioriService;
 
     private List<AprioriService.Rule> rulesCache = null;
+    
+    private static final Logger log = LoggerFactory.getLogger(BasketController.class);
 
     @GetMapping("/suggestions")
     public ResponseEntity<Set<Integer>> getSuggestions(@RequestParam List<Integer> cart) {
@@ -68,8 +75,13 @@ public class BasketController {
 
             ArrayNode array = JsonNodeFactory.instance.arrayNode();
             for (Integer id : suggestions) {
-                JsonNode product = wooService.getProductDetails(id);
-                array.add(product);
+                try {
+                    JsonNode product = wooService.getProductDetails(id);
+                    array.add(product);                      
+                } catch (IOException ex) {                    
+                    log.warn("Product {} skipped: {}", id, ex.getMessage());
+                    // non faccio fallire l’intera risposta
+                }
             }
 
             return ResponseEntity.ok(array);
