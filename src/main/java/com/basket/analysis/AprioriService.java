@@ -7,8 +7,8 @@ import java.util.*;
 @Service
 public class AprioriService {
 
-    private double minSupport = 0.5;
-    private double minConfidence = 0.7;
+    private double minSupport = 0.06;
+    private double minConfidence = 0.35;
 
     public static class Rule {
         public Set<Integer> antecedent;
