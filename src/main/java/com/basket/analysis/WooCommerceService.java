@@ -61,7 +61,7 @@ public class WooCommerceService {
         String credentials = apiKey + ":" + apiSecret;
         String base64Creds = Base64.getEncoder().encodeToString(credentials.getBytes());
 
-        HttpURLConnection connection = (HttpURLConnection) new URL("https://www.benfatto.jdvart.it/wp-json/wc/v3/products/" + productId).openConnection();
+        HttpURLConnection connection = (HttpURLConnection) new URL("https://www.benfattocrt.jdvart.it/wp-json/wc/v3/products/" + productId).openConnection();
         connection.setRequestMethod("GET");
         connection.setRequestProperty("Authorization", "Basic " + base64Creds);
         connection.setRequestProperty("Accept", "application/json");
