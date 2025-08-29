@@ -39,7 +39,7 @@ public class AprioriService {
         List<Rule> rules = new ArrayList<>();
         Map<Set<Integer>, Integer> freqItemsets = new HashMap<>();
 
-        // 1. Genera itemset frequenti con supporto ≥ minSupport
+        // Genera itemset frequenti con supporto ≥ minSupport
         Map<Set<Integer>, Integer> candidates = generateCandidates(transactions, 1);
         while (!candidates.isEmpty()) {
             Map<Set<Integer>, Integer> filtered = filterBySupport(candidates, transactionCount);
@@ -47,13 +47,13 @@ public class AprioriService {
 
             Set<Set<Integer>> nextGen = generateNextItemsets(filtered.keySet());
 
-            if (nextGen.isEmpty())                // ⬅️ nuovo guard-clause
-                break;                            //    interrompe il ciclo
+            if (nextGen.isEmpty())                // nuovo guard-clause
+                break;                            // interrompe il ciclo
 
             candidates = countItemsets(nextGen, transactions);
         }
 
-        // 2. Genera regole valide da itemset frequenti
+        // Genera regole valide da itemset frequenti
         for (Set<Integer> itemset : freqItemsets.keySet()) {
             if (itemset.size() < 2) continue;
 
@@ -125,19 +125,19 @@ public class AprioriService {
         return result;
     }
 
- // sostituisci *intero* metodo
+    // sostituisci intero metodo
     private Map<Set<Integer>, Integer> countItemsets(Set<Set<Integer>> candidates,
                                                      List<Set<Integer>> transactions) {
 
-        // ❶ Se non ci sono più candidati, non calcolare nulla
+        // Se non ci sono più candidati, non calcolare nulla
         if (candidates == null || candidates.isEmpty()) {
-            return Collections.emptyMap();          // evita NoSuchElementException
+            return Collections.emptyMap();          // evita eccezioni
         }
 
         int size = candidates.iterator().next().size();
         Map<Set<Integer>, Integer> counts = new HashMap<>();
 
-        // ❷ Conta quante volte ogni candidato compare nelle transazioni
+        // Conta quante volte ogni candidato compare nelle transazioni
         for (Set<Set<Integer>> transactionCandidates :
                 transactions.stream()
                             .map(t -> combinations(t, size))
@@ -145,7 +145,7 @@ public class AprioriService {
 
             for (Set<Integer> candidate : candidates) {
                 if (transactionCandidates.contains(candidate)) {
-                    counts.merge(candidate, 1, Integer::sum); // più conciso di getOrDefault
+                    counts.merge(candidate, 1, Integer::sum);
                 }
             }
         }

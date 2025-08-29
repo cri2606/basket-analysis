@@ -8,6 +8,7 @@ import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -26,16 +27,30 @@ public class BasketController {
     @Autowired
     private AprioriService aprioriService;
 
-    private List<AprioriService.Rule> rulesCache = null;
+    private volatile List<AprioriService.Rule> rulesCache = null;
     
     private static final Logger log = LoggerFactory.getLogger(BasketController.class);
+    
+    // Refresh giornaliero alle 10:00 C.E.T./C.E.S.T.
+    @Scheduled(cron = "0 0 10 * * *", zone = "Europe/Rome")
+    public void refreshRulesCache() {
+        try {
+            List<Set<Integer>> transactions = wooService.getOrderTransactions();
+            List<AprioriService.Rule> newRules = aprioriService.apriori(transactions);
+
+            rulesCache = newRules;
+
+            log.info("Regole ricalcolate e cache aggiornata ({} regole).", newRules.size());
+        } catch (Exception e) {
+            log.error("Errore durante il refresh delle regole: {}", e.getMessage(), e);
+        }
+    }
 
     @GetMapping("/suggestions")
     public ResponseEntity<Set<Integer>> getSuggestions(@RequestParam List<Integer> cart) {
         try {
             if (rulesCache == null) {
-                List<Set<Integer>> transactions = wooService.getOrderTransactions();
-                rulesCache = aprioriService.apriori(transactions);
+            	refreshRulesCache();
             }
 
             Set<Integer> cartSet = new HashSet<>(cart);
@@ -58,8 +73,7 @@ public class BasketController {
     public ResponseEntity<JsonNode> getDetailedSuggestions(@RequestParam List<Integer> cart) {
         try {
             if (rulesCache == null) {
-                List<Set<Integer>> transactions = wooService.getOrderTransactions();
-                rulesCache = aprioriService.apriori(transactions);
+            	refreshRulesCache();
             }
 
             Set<Integer> cartSet = new HashSet<>(cart);
